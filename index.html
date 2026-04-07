@@ -21,16 +21,19 @@
 <body class="animated-bg text-gray-200 font-sans antialiased selection:bg-red-500 selection:text-white">
 
     <nav class="glass-panel sticky top-0 z-50 border-b border-gray-700/50">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchPage('klasemen')">
-                <img src="Logo SR.jpeg" alt="Logo" class="h-8 rounded object-contain bg-white/95 p-1" />
-                <span class="font-bold text-white tracking-widest text-sm md:text-base">SIAK <span class="text-red-500">RUNNERS</span></span>
+        <div class="max-w-5xl mx-auto px-2 md:px-4 py-2.5 md:py-3 flex justify-between items-center">
+            
+            <div class="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0" onclick="switchPage('klasemen')">
+                <img src="Logo SR.jpeg" alt="Logo" class="h-7 md:h-8 rounded object-contain bg-white/95 p-1" />
+                <span class="font-bold text-white tracking-widest text-sm md:text-base hidden sm:block">SIAK <span class="text-red-500">RUNNERS</span></span>
             </div>
-            <div class="flex gap-2 md:gap-6 text-xs md:text-sm font-semibold tracking-wider">
-                <button onclick="switchPage('klasemen')" id="nav-klasemen" class="text-white bg-white/10 px-3 py-2 rounded-lg transition-colors">KLASEMEN</button>
-                <button onclick="switchPage('event')" id="nav-event" class="text-gray-400 hover:text-white hover:bg-white/5 px-3 py-2 rounded-lg transition-colors">EVENT</button>
-                <button onclick="switchPage('tentang')" id="nav-tentang" class="text-gray-400 hover:text-white hover:bg-white/5 px-3 py-2 rounded-lg transition-colors">TENTANG</button>
+            
+            <div class="flex gap-1 md:gap-6 text-[10px] md:text-sm font-semibold tracking-wider">
+                <button onclick="switchPage('klasemen')" id="nav-klasemen" class="text-white bg-white/10 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors">KLASEMEN</button>
+                <button onclick="switchPage('event')" id="nav-event" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors">EVENT</button>
+                <button onclick="switchPage('tentang')" id="nav-tentang" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors">TENTANG</button>
             </div>
+
         </div>
     </nav>
 
@@ -170,7 +173,7 @@
             }
         }
 
-        // Logika Tarik Data Event (Halaman 2 - REVISI FULL FLYER)
+        // Logika Tarik Data Event (Halaman 2)
         let isEventLoaded = false;
         async function loadEventData() {
             if (isEventLoaded) return; 
@@ -189,7 +192,6 @@
                 result.data.forEach(event => {
                     let badgeColor = event.status.toLowerCase().includes('selesai') ? 'bg-gray-600 text-gray-300' : 'bg-red-600 text-white';
                     
-                    // REVISI: Gambar sekarang menyesuaikan ukuran aslinya (h-auto object-contain) agar tidak terpotong sama sekali
                     let imgHtml = event.linkFoto ? `<div class="w-full bg-black/40 flex justify-center border-b border-gray-700"><img src="${event.linkFoto}" alt="Flyer ${event.judul}" class="w-full h-auto object-contain max-h-[600px]"></div>` : '';
                     
                     let btnHtml = event.linkDaftar ? `<a href="${event.linkDaftar}" target="_blank" class="mt-4 block w-full text-center bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-red-500/50 transition-all duration-300 uppercase tracking-widest text-sm">Daftar Sekarang</a>` : '';
@@ -216,7 +218,6 @@
             }
         }
 
-        // Pancing load klasemen pertama kali
         loadLeaderboardData();
     </script>
 </body>
