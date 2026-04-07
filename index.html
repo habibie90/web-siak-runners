@@ -156,6 +156,7 @@
         }
 
         // Logika Tarik Data Event
+        // --- SISTEM API EVENT (HALAMAN 2) ---
         let isEventLoaded = false;
         async function loadEventData() {
             if (isEventLoaded) return; 
@@ -172,22 +173,33 @@
                 }
 
                 result.data.forEach(event => {
-                    let badgeColor = event.status.toLowerCase() === 'selesai' ? 'bg-gray-600' : 'bg-red-600';
+                    let badgeColor = event.status.toLowerCase().includes('selesai') ? 'bg-gray-600' : 'bg-green-600';
+                    
+                    // Siapkan elemen Gambar HTML jika link foto diisi di Spreadsheet
+                    let imgHtml = event.linkFoto ? `<div class="w-full h-56 overflow-hidden"><img src="${event.linkFoto}" alt="Flyer ${event.judul}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500"></div>` : '';
+                    
+                    // Siapkan elemen Tombol HTML jika link pendaftaran diisi di Spreadsheet
+                    let btnHtml = event.linkDaftar ? `<a href="${event.linkDaftar}" target="_blank" class="mt-4 block w-full text-center bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-red-500/50 transition-all duration-300 uppercase tracking-widest text-sm">Daftar Sekarang</a>` : '';
+
                     container.innerHTML += `
-                        <div class="glass-panel p-6 rounded-2xl border-t-4 border-red-500 hover:-translate-y-1 transition transform duration-300 flex flex-col justify-between">
-                            <div>
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="text-[10px] font-bold px-2 py-1 rounded text-white ${badgeColor} uppercase tracking-wider">${event.status}</span>
-                                    <span class="text-xs text-gray-400 font-mono">${event.tanggal}</span>
+                        <div class="glass-panel rounded-2xl border-t-4 border-red-500 hover:-translate-y-1 transition transform duration-300 flex flex-col justify-between overflow-hidden shadow-2xl">
+                            ${imgHtml}
+                            <div class="p-6 flex flex-col h-full justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <span class="text-[10px] font-black px-2.5 py-1 rounded text-white ${badgeColor} uppercase tracking-wider shadow-md">${event.status}</span>
+                                        <span class="text-xs text-yellow-400 font-bold bg-gray-900/80 px-2 py-1 rounded">${event.tanggal}</span>
+                                    </div>
+                                    <h3 class="text-lg md:text-xl font-black text-white mb-2 leading-tight">${event.judul}</h3>
+                                    <p class="text-sm text-gray-300 leading-relaxed mb-4">${event.deskripsi}</p>
                                 </div>
-                                <h3 class="text-lg md:text-xl font-bold text-white mb-2">${event.judul}</h3>
-                                <p class="text-sm text-gray-400 leading-relaxed mb-4">${event.deskripsi}</p>
+                                ${btnHtml}
                             </div>
                         </div>`;
                 });
                 isEventLoaded = true; 
             } catch (error) {
-                document.getElementById('event-container').innerHTML = `<div class="glass-panel p-6 rounded-2xl text-center text-red-400 col-span-full text-sm">Gagal memuat jadwal event dari Google Sheets.</div>`;
+                document.getElementById('event-container').innerHTML = `<div class="glass-panel p-6 rounded-2xl text-center text-red-400 col-span-full text-sm">Gagal memuat jadwal event dari Database: ${error.message}</div>`;
             }
         }
 
