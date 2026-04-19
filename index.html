@@ -174,6 +174,7 @@
         }
 
         // Logika Tarik Data Event (Halaman 2)
+        // Logika Tarik Data Event (Halaman 2 - REVISI BINGKAI FOTO RAPI)
         let isEventLoaded = false;
         async function loadEventData() {
             if (isEventLoaded) return; 
@@ -192,7 +193,9 @@
                 result.data.forEach(event => {
                     let badgeColor = event.status.toLowerCase().includes('selesai') ? 'bg-gray-600 text-gray-300' : 'bg-red-600 text-white';
                     
-                    let imgHtml = event.linkFoto ? `<div class="w-full bg-black/40 flex justify-center border-b border-gray-700"><img src="${event.linkFoto}" alt="Flyer ${event.judul}" class="w-full h-auto object-contain max-h-[600px]"></div>` : '';
+                    // REVISI: Mengunci tinggi gambar di h-64 (HP) dan h-72 (Laptop) agar tidak raksasa.
+                    // Background gelap (bg-gray-950) memberi kesan bingkai premium.
+                    let imgHtml = event.linkFoto ? `<div class="w-full h-64 md:h-72 bg-gray-950/80 p-4 flex justify-center border-b border-gray-700/50"><img src="${event.linkFoto}" alt="Flyer ${event.judul}" class="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300"></div>` : '';
                     
                     let btnHtml = event.linkDaftar ? `<a href="${event.linkDaftar}" target="_blank" class="mt-4 block w-full text-center bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-red-500/50 transition-all duration-300 uppercase tracking-widest text-sm">Daftar Sekarang</a>` : '';
 
