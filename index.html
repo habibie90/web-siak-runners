@@ -16,6 +16,9 @@
         .page-section { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
         .page-active { display: block; opacity: 1; animation: fadeIn 0.5s forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Tambahan CSS khusus untuk bingkai canvas foto */
+        canvas { max-width: 100%; height: auto; border-radius: 1rem; }
     </style>
 </head>
 <body class="animated-bg text-gray-200 font-sans antialiased selection:bg-red-500 selection:text-white">
@@ -28,10 +31,11 @@
                 <span class="font-bold text-white tracking-widest text-sm md:text-base hidden sm:block">SIAK <span class="text-red-500">RUNNERS</span></span>
             </div>
             
-            <div class="flex gap-1 md:gap-6 text-[10px] md:text-sm font-semibold tracking-wider">
-                <button onclick="switchPage('klasemen')" id="nav-klasemen" class="text-white bg-white/10 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors">KLASEMEN</button>
-                <button onclick="switchPage('event')" id="nav-event" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors">EVENT</button>
-                <button onclick="switchPage('tentang')" id="nav-tentang" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors">TENTANG</button>
+            <div class="flex gap-1 md:gap-4 text-[10px] md:text-sm font-semibold tracking-wider overflow-x-auto">
+                <button onclick="switchPage('klasemen')" id="nav-klasemen" class="text-white bg-white/10 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors whitespace-nowrap">KLASEMEN</button>
+                <button onclick="switchPage('event')" id="nav-event" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors whitespace-nowrap">EVENT</button>
+                <button onclick="switchPage('selfie')" id="nav-selfie" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors whitespace-nowrap">SELFIE</button>
+                <button onclick="switchPage('tentang')" id="nav-tentang" class="text-gray-400 hover:text-white hover:bg-white/5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg transition-colors whitespace-nowrap">TENTANG</button>
             </div>
 
         </div>
@@ -80,7 +84,7 @@
                             <tr><th class="px-4 py-3 md:px-6 md:py-5 text-center w-12 md:w-20 font-bold">Pos</th><th class="px-4 py-3 md:px-6 md:py-5 font-bold">Nama Pelari</th><th class="px-4 py-3 md:px-6 md:py-5 text-right font-bold">Total Jarak</th></tr>
                         </thead>
                         <tbody id="leaderboard-body" class="divide-y divide-gray-800/60">
-                            <tr><td colspan="3" class="text-center py-12 md:py-20 text-gray-500 animate-pulse">Menarik data dari Strava...</td></tr>
+                            <tr><td colspan="3" class="text-center py-12 md:py-20 text-gray-500 animate-pulse">Menarik data dari Database...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -95,6 +99,42 @@
             
             <div id="event-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="glass-panel p-6 rounded-2xl text-center text-gray-400 animate-pulse col-span-full">Mengambil data dari Database...</div>
+            </div>
+        </section>
+
+        <section id="page-selfie" class="page-section">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Selfie <span class="text-red-500">Run Maker</span></h2>
+                <p class="text-gray-400 mt-2 text-sm">Buat flyer digital pencapaian lari Anda untuk di-share ke sosmed!</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="glass-panel p-6 rounded-2xl flex flex-col gap-5 border-t-4 border-red-500">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">1. Unggah Foto Selfie</label>
+                        <input type="file" id="upload-photo" accept="image/*" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">2. Nama Pelari</label>
+                        <input type="text" id="input-name" placeholder="Contoh: Budi Santoso" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 transition-all placeholder-gray-600" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">3. Jarak Lari (KM)</label>
+                        <input type="number" id="input-dist" step="0.01" placeholder="Contoh: 5.25" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 transition-all placeholder-gray-600" />
+                    </div>
+                    
+                    <div class="flex flex-col gap-3 mt-2">
+                        <button onclick="generateFlyer()" class="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-black py-4 rounded-xl transition shadow-lg shadow-red-900/40 uppercase tracking-widest">Tampilkan Hasil</button>
+                        <button id="download-btn" disabled onclick="downloadFlyer()" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl transition uppercase tracking-widest">Unduh Gambar</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Live Preview</p>
+                    <div class="p-2 bg-gray-950/50 rounded-3xl border border-gray-800 shadow-2xl w-full max-w-md">
+                        <canvas id="flyerCanvas" width="1080" height="1080" class="shadow-2xl bg-gray-900 w-full"></canvas>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -114,10 +154,10 @@
     </div>
 
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI BAWAH INI !!!
+        // API URL TETAP AMAN SESUAI KODE ASLI ANDA
         const API_URL = 'https://script.google.com/macros/s/AKfycbzE87o9DbsigZD7iROdlTj-iQ1ZmjMsiydyfELA8iOuavsIgD1Jztd2KWFjuh9DZg8S/exec';
 
-        // Logika Navigasi Pindah Halaman
+        // ================= LOGIKA NAVIGASI =================
         function switchPage(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('page-active'));
             document.getElementById('page-' + pageId).classList.add('page-active');
@@ -134,7 +174,99 @@
             if (pageId === 'event') loadEventData();
         }
 
-        // Logika Tarik Data Klasemen (Halaman 1)
+        // ================= LOGIKA CANVAS SELFIE MAKER =================
+        const canvas = document.getElementById('flyerCanvas');
+        const ctx = canvas.getContext('2d');
+        let uploadedImage = null;
+
+        // Tampilan awal Canvas kosong
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, 1080, 1080);
+        ctx.fillStyle = "#334155";
+        ctx.font = "40px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Preview Foto Akan Muncul Di Sini", 540, 540);
+
+        // Saat foto diunggah
+        document.getElementById('upload-photo').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    uploadedImage = img;
+                    drawCanvasBase(); // Langsung gambar foto begitu diunggah
+                }
+                img.src = event.target.result;
+            }
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        });
+
+        function drawCanvasBase() {
+            if (!uploadedImage) return;
+            // Menghitung rasio agar gambar pas di tengah (object-cover style)
+            const scale = Math.max(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+            const x = (canvas.width / 2) - (uploadedImage.width / 2) * scale;
+            const y = (canvas.height / 2) - (uploadedImage.height / 2) * scale;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(uploadedImage, x, y, uploadedImage.width * scale, uploadedImage.height * scale);
+        }
+
+        function generateFlyer() {
+            if (!uploadedImage) { 
+                alert("Silakan unggah foto lari Anda terlebih dahulu!"); 
+                return; 
+            }
+            
+            const name = document.getElementById('input-name').value.toUpperCase() || 'SIAK RUNNER';
+            const dist = document.getElementById('input-dist').value || '0.00';
+
+            // 1. Gambar ulang foto dasar (reset)
+            drawCanvasBase();
+
+            // 2. Buat Gradien Gelap di bawah agar teks terbaca jelas
+            const grad = ctx.createLinearGradient(0, 600, 0, 1080);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(0.5, 'rgba(0,0,0,0.8)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.95)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 600, 1080, 480);
+
+            // 3. Garis Merah khas Siak Runners
+            ctx.fillStyle = "#dc2626";
+            ctx.fillRect(0, 1050, 1080, 30);
+
+            // 4. Render Teks Nama
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 55px sans-serif";
+            ctx.fillText(name, 70, 920);
+
+            // 5. Render Teks Jarak (Angka Kuning Besar)
+            ctx.fillStyle = "#facc15"; 
+            ctx.font = "black 140px sans-serif";
+            ctx.fillText(dist + " KM", 60, 1030);
+
+            // 6. Teks Watermark Komunitas
+            ctx.textAlign = "right";
+            ctx.fillStyle = "rgba(255,255,255,0.7)";
+            ctx.font = "bold 35px sans-serif";
+            ctx.fillText("SIAK RUNNERS", 1010, 990);
+            ctx.font = "25px sans-serif";
+            ctx.fillText("RUN FOR FUN & HEALTHY", 1010, 1030);
+
+            // Buka gembok tombol Download
+            document.getElementById('download-btn').disabled = false;
+        }
+
+        function downloadFlyer() {
+            const link = document.createElement('a');
+            link.download = 'Pencapaian_SiakRunners.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // ================= LOGIKA KLASEMEN =================
         async function loadLeaderboardData() {
             try {
                 const response = await fetch(API_URL + "?page=klasemen");
@@ -173,8 +305,7 @@
             }
         }
 
-        // Logika Tarik Data Event (Halaman 2)
-        // Logika Tarik Data Event (Halaman 2 - REVISI BINGKAI FOTO RAPI)
+        // ================= LOGIKA EVENT =================
         let isEventLoaded = false;
         async function loadEventData() {
             if (isEventLoaded) return; 
@@ -193,8 +324,6 @@
                 result.data.forEach(event => {
                     let badgeColor = event.status.toLowerCase().includes('selesai') ? 'bg-gray-600 text-gray-300' : 'bg-red-600 text-white';
                     
-                    // REVISI: Mengunci tinggi gambar di h-64 (HP) dan h-72 (Laptop) agar tidak raksasa.
-                    // Background gelap (bg-gray-950) memberi kesan bingkai premium.
                     let imgHtml = event.linkFoto ? `<div class="w-full h-64 md:h-72 bg-gray-950/80 p-4 flex justify-center border-b border-gray-700/50"><img src="${event.linkFoto}" alt="Flyer ${event.judul}" class="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300"></div>` : '';
                     
                     let btnHtml = event.linkDaftar ? `<a href="${event.linkDaftar}" target="_blank" class="mt-4 block w-full text-center bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-red-500/50 transition-all duration-300 uppercase tracking-widest text-sm">Daftar Sekarang</a>` : '';
@@ -221,6 +350,7 @@
             }
         }
 
+        // Pancing fungsi klasemen saat web pertama kali dimuat
         loadLeaderboardData();
     </script>
 </body>
