@@ -16,6 +16,9 @@
         .page-section { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
         .page-active { display: block; opacity: 1; animation: fadeIn 0.5s forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* CSS Modal Detail */
+        #detail-modal { display: none; }
+        .modal-open { display: flex !important; animation: fadeIn 0.3s; }
     </style>
 </head>
 <body class="animated-bg text-gray-200 font-sans antialiased selection:bg-red-500 selection:text-white">
@@ -51,7 +54,7 @@
                     </div>
                 </div>
                 <div class="flex flex-col w-full md:w-auto items-center md:items-end border-t md:border-t-0 border-gray-700/80 pt-5 md:pt-0 mt-2 md:mt-0">
-                    <p class="text-[10px] md:text-xs text-yellow-400 uppercase font-bold tracking-widest mb-1">Total Jarak</p>
+                    <p class="text-[10px] md:text-xs text-yellow-400 uppercase font-bold tracking-widest mb-1">Total Jarak Kolektif</p>
                     <p id="stat-distance" class="text-3xl md:text-4xl font-black text-white tracking-tight">0 <span class="text-lg md:text-xl text-gray-400 font-bold">km</span></p>
                 </div>
             </div>
@@ -67,10 +70,8 @@
                         <select id="month-filter" onchange="renderLeaderboardTable()" class="bg-gray-800 border border-gray-600 text-white text-xs md:text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-2 w-full md:w-auto outline-none cursor-pointer">
                             <option value="">Memuat data...</option>
                         </select>
-                        
                         <button onclick="exportToExcel()" title="Download sebagai File Excel/CSV" class="bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-bold py-2 px-3 rounded-lg transition shadow flex items-center gap-1 shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Export
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
                         </button>
                     </div>
                 </div>
@@ -88,58 +89,42 @@
             </div>
         </section>
 
+        <div id="detail-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm justify-center items-center p-4">
+            <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden border border-gray-700 flex flex-col max-h-[80vh]">
+                <div class="bg-gray-900 px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                    <div>
+                        <h3 id="modal-runner-name" class="text-xl font-black text-white uppercase tracking-wider">Nama Pelari</h3>
+                        <p id="modal-runner-stats" class="text-xs text-yellow-500 font-bold uppercase"></p>
+                    </div>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
+                </div>
+                <div class="overflow-y-auto p-4 space-y-2" id="modal-history-list"></div>
+                <div class="p-4 bg-gray-900 border-t border-gray-700">
+                    <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl">TUTUP</button>
+                </div>
+            </div>
+        </div>
+
         <section id="page-event" class="page-section">
-            <div class="mb-8 text-center">
-                <h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Kalender <span class="text-red-500">Event</span></h2>
-            </div>
-            <div id="event-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="glass-panel p-6 rounded-2xl text-center text-gray-400 animate-pulse col-span-full">Mengambil data dari Database...</div>
-            </div>
+            <div class="mb-8 text-center"><h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Kalender <span class="text-red-500">Event</span></h2></div>
+            <div id="event-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="glass-panel p-6 rounded-2xl text-center text-gray-400 animate-pulse col-span-full">Mengambil data...</div></div>
         </section>
 
         <section id="page-upload" class="page-section">
-            <div class="mb-8 text-center">
-                <h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Upload <span class="text-red-500">Foto Event</span></h2>
-                <p class="text-gray-400 mt-2 text-sm max-w-xl mx-auto">Kirimkan foto selfie lari terbaikmu pada event yang kamu ikuti. Tim kami akan membuatkan flyer apresiasi spesial untukmu!</p>
-            </div>
+            <div class="mb-8 text-center"><h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Upload <span class="text-red-500">Foto Event</span></h2></div>
             <div class="glass-panel p-6 md:p-8 rounded-2xl max-w-2xl mx-auto border-t-4 border-red-500 shadow-2xl">
                 <form id="foto-form" class="flex flex-col gap-5" onsubmit="event.preventDefault(); submitData();">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Nama Lengkap</label>
-                            <input type="text" id="up-nama" required placeholder="Sesuai nama di Strava/KTP" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 transition-all" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Kategori Lari</label>
-                            <select id="up-kategori" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 cursor-pointer">
-                                <option value="">Pilih Kategori...</option><option value="5K">5K</option><option value="10K">10K</option><option value="Half Marathon (21K)">Half Marathon (21K)</option><option value="Marathon (42K)">Marathon (42K)</option><option value="Trail Run / Ultra">Trail Run / Ultra</option>
-                            </select>
-                        </div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Nama Lengkap</label><input type="text" id="up-nama" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500" /></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Kategori Lari</label><select id="up-kategori" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 cursor-pointer"><option value="">Pilih...</option><option value="5K">5K</option><option value="10K">10K</option><option value="HM">HM</option><option value="Marathon">Marathon</option></select></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Nama Event Race</label>
-                            <input type="text" id="up-event" required placeholder="Cth: Persadabumi Run 5K" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 transition-all" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Tanggal Event</label>
-                            <input type="date" id="up-tanggal" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 transition-all" />
-                        </div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Event</label><input type="text" id="up-event" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Tanggal</label><input type="date" id="up-tanggal" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Lokasi Race</label>
-                        <input type="text" id="up-lokasi" required placeholder="Cth: Siak Sri Indrapura" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 transition-all" />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Foto Lari / Selfie</label>
-                        <div class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:bg-gray-800/50 transition">
-                            <input type="file" id="up-foto" accept="image/*" required class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer" />
-                            <p class="mt-2 text-xs text-gray-500">Maksimal ukuran file disarankan 5MB</p>
-                        </div>
-                    </div>
-                    <button id="btn-submit" type="submit" class="w-full mt-4 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-black py-4 rounded-xl transition shadow-lg shadow-red-900/40 uppercase tracking-widest flex justify-center items-center gap-2">
-                        <span>Kirim Data & Foto</span>
-                    </button>
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Lokasi Race</label><input type="text" id="up-lokasi" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div>
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Foto Selfie</label><input type="file" id="up-foto" accept="image/*" required class="w-full text-xs text-gray-400" /></div>
+                    <button id="btn-submit" type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-800 text-white font-black py-4 rounded-xl uppercase tracking-widest">Kirim Data & Foto</button>
                     <p id="submit-status" class="text-center text-sm font-bold mt-2 hidden"></p>
                 </form>
             </div>
@@ -147,147 +132,109 @@
 
         <section id="page-tentang" class="page-section">
             <div class="glass-panel p-8 md:p-12 rounded-2xl text-center">
-                <img src="Logo SR.jpeg" alt="Logo" class="h-24 md:h-32 mx-auto rounded-xl mb-6 shadow-2xl bg-white p-2 object-contain" />
+                <img src="Logo SR.jpeg" alt="Logo" class="h-24 mx-auto rounded-xl mb-6 bg-white p-2 object-contain" />
                 <h2 class="text-3xl font-black text-white uppercase tracking-widest mb-4">Siak <span class="text-pulse-red">Runners</span></h2>
-                <p class="text-gray-300 leading-relaxed max-w-2xl mx-auto mb-8 text-sm md:text-base">Komunitas pecinta olahraga lari di Kabupaten Siak. Kami hadir sebagai wadah silaturahmi, berbagi ilmu, dan menyebarkan semangat gaya hidup sehat. Mari berlari bersama, dari pemula hingga pencetak rekor!</p>
-                <div class="flex justify-center gap-4">
-                    <a href="https://instagram.com/siak_runners" target="_blank" class="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 rounded-full font-bold hover:scale-105 transition shadow-lg text-sm">Follow Instagram</a>
-                    <a href="https://www.facebook.com/share/1CjMCoGjYV/" target="_blank" class="px-6 py-3 bg-blue-600 rounded-full font-bold hover:scale-105 transition shadow-lg text-sm">Facebook</a>
-                </div>
+                <p class="text-gray-300 leading-relaxed max-w-2xl mx-auto">Komunitas pecinta olahraga lari di Kabupaten Siak. Mari berlari bersama!</p>
             </div>
         </section>
     </div>
 
     <script>
-        // MASUKKAN URL API ANDA DI SINI
         const API_URL = 'https://script.google.com/macros/s/AKfycbzE87o9DbsigZD7iROdlTj-iQ1ZmjMsiydyfELA8iOuavsIgD1Jztd2KWFjuh9DZg8S/exec';
 
-        // ================= LOGIKA NAVIGASI =================
         function switchPage(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('page-active'));
             document.getElementById('page-' + pageId).classList.add('page-active');
             document.querySelectorAll('nav button').forEach(btn => {
-                btn.classList.remove('text-white', 'bg-white/10');
-                btn.classList.add('text-gray-400');
+                btn.classList.remove('text-white', 'bg-white/10'); btn.classList.add('text-gray-400');
             });
             document.getElementById('nav-' + pageId).classList.remove('text-gray-400');
             document.getElementById('nav-' + pageId).classList.add('text-white', 'bg-white/10');
             if (pageId === 'event') loadEventData();
         }
 
-        // ================= LOGIKA KLASEMEN & FILTER BULAN =================
-        let globalDataSemuaBulan = {}; // Menyimpan data mentah seluruh bulan
+        let globalDataSemuaBulan = {}; 
 
         async function loadLeaderboardData() {
             try {
                 const response = await fetch(API_URL + "?page=klasemen");
                 const result = await response.json();
                 if (result.status === "error") throw new Error(result.message);
-                
-                globalDataSemuaBulan = result.data; // Simpan semua data
-                
-                // Menyiapkan Filter Dropdown Bulan
+                globalDataSemuaBulan = result.data; 
                 const monthSelect = document.getElementById('month-filter');
                 monthSelect.innerHTML = '';
                 const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
                 const currentYear = new Date().getFullYear();
                 const currentMonth = new Date().getMonth() + 1;
-
-                // Loop untuk membuat pilihan dari Januari - Desember tahun ini
                 for(let m = 1; m <= 12; m++) {
                     let monthStr = String(m).padStart(2, '0');
                     let val = `${currentYear}-${monthStr}`;
-                    let label = `${namaBulan[m-1]} ${currentYear}`;
-                    let selected = (m === currentMonth) ? 'selected' : '';
-                    monthSelect.innerHTML += `<option value="${val}" ${selected}>${label}</option>`;
+                    monthSelect.innerHTML += `<option value="${val}" ${m===currentMonth ? 'selected' : ''}>${namaBulan[m-1]} ${currentYear}</option>`;
                 }
-
-                // Setelah dropdown dibuat, langsung render tabel berdasarkan bulan saat ini
                 renderLeaderboardTable();
-
             } catch (error) {
-                document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-400 text-xs">Gagal: ${error.message}</td></tr>`;
+                document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-400">Gagal: ${error.message}</td></tr>`;
             }
         }
 
         function renderLeaderboardTable() {
             const selectedMonth = document.getElementById('month-filter').value;
-            // Ambil data untuk bulan yang dipilih, jika kosong kembalikan array kosong []
             const dataBulanIni = globalDataSemuaBulan[selectedMonth] || []; 
-            
-            // Hitung total jarak kolektif
-            let totalDist = 0; 
-            dataBulanIni.forEach(r => totalDist += r.distance);
+            let totalDist = 0; dataBulanIni.forEach(r => totalDist += r.distance);
             document.getElementById('stat-distance').innerHTML = `${totalDist.toFixed(1)} <span class="text-xl text-yellow-500 font-bold">km</span>`;
-
             const tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '';
-            
-            if (dataBulanIni.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-12 text-gray-500">Belum ada aktivitas lari bulan ini.</td></tr>'; 
-                return; 
-            }
+            if (dataBulanIni.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-12 text-gray-500 italic">Belum ada data.</td></tr>'; return; }
 
-            // Tampilkan data ke tabel (Maksimal 50 peringkat teratas)
-            dataBulanIni.slice(0, 50).forEach((runner, index) => {
+            dataBulanIni.forEach((runner, index) => {
                 let rank = index + 1;
-                let rankIcon = `<span class="text-gray-500 font-black text-lg md:text-xl">${rank}</span>`;
-                if (rank === 1) rankIcon = `<div class="bg-yellow-500/20 text-yellow-400 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center mx-auto border border-yellow-500/30 text-lg md:text-2xl">🥇</div>`;
-                if (rank === 2) rankIcon = `<div class="bg-gray-400/20 text-gray-300 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center mx-auto border border-gray-400/30 text-lg md:text-2xl">🥈</div>`;
-                if (rank === 3) rankIcon = `<div class="bg-orange-500/20 text-orange-400 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center mx-auto border border-orange-500/30 text-lg md:text-2xl">🥉</div>`;
-
+                let rankIcon = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : rank));
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-800/50 transition-colors group">
-                        <td class="px-4 md:px-6 py-4 text-center">${rankIcon}</td>
-                        <td class="px-4 md:px-6 py-4 font-bold text-gray-100 text-sm md:text-base group-hover:text-white transition-colors">${runner.name}<br><span class="text-[10px] md:text-xs text-gray-400 font-normal bg-gray-900 border border-gray-700 px-3 py-1 rounded-full mt-1.5 inline-block group-hover:border-gray-500">${runner.runs}x Lari</span></td>
-                        <td class="px-4 md:px-6 py-4 text-right text-blue-400 font-black text-base md:text-xl group-hover:text-blue-300">${runner.distance.toFixed(2)}</td>
+                    <tr onclick="showRunnerDetail('${selectedMonth}', ${index})" class="hover:bg-gray-800/80 transition-colors group cursor-pointer border-b border-gray-800/40">
+                        <td class="px-4 md:px-6 py-4 text-center font-bold text-gray-500">${rankIcon}</td>
+                        <td class="px-4 md:px-6 py-4 font-bold text-gray-100 group-hover:text-red-400 transition-colors">${runner.name}<br><span class="text-[10px] text-gray-400 font-normal bg-gray-900 border border-gray-700 px-2 py-0.5 rounded-full">${runner.runs}x Lari</span></td>
+                        <td class="px-4 md:px-6 py-4 text-right text-blue-400 font-black text-base md:text-lg">${runner.distance.toFixed(2)}</td>
                     </tr>`;
             });
         }
 
-        // ================= LOGIKA EXPORT EXCEL (CSV) =================
+        function showRunnerDetail(month, index) {
+            const runner = globalDataSemuaBulan[month][index];
+            document.getElementById('modal-runner-name').innerText = runner.name;
+            document.getElementById('modal-runner-stats').innerText = `${runner.runs} Kali Lari | Total ${runner.distance.toFixed(2)} KM`;
+            const list = document.getElementById('modal-history-list');
+            list.innerHTML = '';
+            runner.history.forEach((h, i) => {
+                list.innerHTML += `
+                    <div class="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-700/50">
+                        <span class="text-sm font-bold text-gray-400">#${i+1} - ${h.tgl}</span>
+                        <span class="text-sm font-black text-white">${h.km} KM</span>
+                    </div>`;
+            });
+            document.getElementById('detail-modal').classList.add('modal-open');
+        }
+
+        function closeModal() { document.getElementById('detail-modal').classList.remove('modal-open'); }
+
         function exportToExcel() {
             const selectedMonth = document.getElementById('month-filter').value;
             const dataBulanIni = globalDataSemuaBulan[selectedMonth] || [];
-            
-            if (dataBulanIni.length === 0) {
-                alert("Tidak ada data lari untuk bulan yang dipilih.");
-                return;
-            }
-
-            // Membuat header kolom CSV
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Posisi,Nama Pelari,Total Lari (Kali),Total Jarak (KM)\n";
-
-            // Mengisi data per baris
-            dataBulanIni.forEach((runner, index) => {
-                let row = `${index + 1},"${runner.name}",${runner.runs},${runner.distance.toFixed(2)}`;
-                csvContent += row + "\n";
-            });
-
-            // Memicu proses download
-            const encodedUri = encodeURI(csvContent);
+            if (dataBulanIni.length === 0) { alert("Tidak ada data."); return; }
+            let csv = "Posisi,Nama Pelari,Total Lari,Total Jarak (KM)\n";
+            dataBulanIni.forEach((r, i) => csv += `${i + 1},"${r.name}",${r.runs},${r.distance.toFixed(2)}\n`);
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Rekap_Siak_Runners_${selectedMonth}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.setAttribute("download", `Rekap_SR_${selectedMonth}.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // ================= LOGIKA SUBMIT DATA & UPLOAD FOTO =================
         function submitData() {
             const btn = document.getElementById('btn-submit');
             const status = document.getElementById('submit-status');
-            const fileInput = document.getElementById('up-foto');
-            const file = fileInput.files[0];
-
-            if (!file) { alert('Silakan pilih foto terlebih dahulu!'); return; }
-
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengunggah Data & Foto...</span>`;
-            btn.disabled = true; btn.classList.add('opacity-70', 'cursor-not-allowed');
-            status.classList.remove('hidden', 'text-red-400', 'text-green-400'); status.innerText = "";
-
+            const file = document.getElementById('up-foto').files[0];
+            if (!file) return;
+            btn.innerHTML = `<span>⏳ Mengirim...</span>`; btn.disabled = true;
             const reader = new FileReader();
             reader.onload = async function() {
                 const payload = {
@@ -300,57 +247,29 @@
                     const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
                     const result = await response.json();
                     if (result.status === "success") {
-                        status.innerText = "✅ Data dan Foto berhasil terkirim!"; status.classList.add('text-green-400');
+                        status.innerText = "✅ Berhasil Terkirim!"; status.className = "text-center text-green-400 font-bold mt-2";
                         document.getElementById('foto-form').reset();
                     } else { throw new Error(result.message); }
-                } catch (error) {
-                    status.innerText = "❌ Gagal mengirim: " + error.message; status.classList.add('text-red-400');
-                } finally {
-                    btn.innerHTML = `<span>Kirim Data & Foto</span>`; btn.disabled = false; btn.classList.remove('opacity-70', 'cursor-not-allowed'); status.classList.remove('hidden');
-                }
+                } catch (error) { status.innerText = "❌ Gagal: " + error.message; status.className = "text-center text-red-400 font-bold mt-2"; }
+                finally { btn.innerHTML = `<span>Kirim Data & Foto</span>`; btn.disabled = false; status.classList.remove('hidden'); }
             };
             reader.readAsDataURL(file);
         }
 
-        // ================= LOGIKA EVENT =================
-        let isEventLoaded = false;
         async function loadEventData() {
-            if (isEventLoaded) return; 
             try {
                 const response = await fetch(API_URL + "?page=event");
                 const result = await response.json();
                 const container = document.getElementById('event-container');
                 container.innerHTML = ''; 
-                if (result.data.length === 0) { container.innerHTML = '<div class="glass-panel p-6 rounded-2xl text-center text-gray-400 col-span-full">Belum ada agenda event saat ini.</div>'; return; }
-
+                if (result.data.length === 0) { container.innerHTML = '<div class="glass-panel p-6 text-gray-400 col-span-full">Belum ada event.</div>'; return; }
                 result.data.forEach(event => {
-                    let badgeColor = event.status.toLowerCase().includes('selesai') ? 'bg-gray-600 text-gray-300' : 'bg-red-600 text-white';
-                    let imgHtml = event.linkFoto ? `<div class="w-full h-64 md:h-72 bg-gray-950/80 p-4 flex justify-center border-b border-gray-700/50"><img src="${event.linkFoto}" alt="Flyer ${event.judul}" class="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300"></div>` : '';
-                    let btnHtml = event.linkDaftar ? `<a href="${event.linkDaftar}" target="_blank" class="mt-4 block w-full text-center bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-red-500/50 transition-all duration-300 uppercase tracking-widest text-sm">Daftar Sekarang</a>` : '';
-
-                    container.innerHTML += `
-                        <div class="glass-panel rounded-2xl border-t-4 border-red-500 hover:-translate-y-1 transition transform duration-300 flex flex-col justify-start overflow-hidden shadow-2xl">
-                            ${imgHtml}
-                            <div class="p-5 md:p-6 flex flex-col h-full justify-between">
-                                <div>
-                                    <div class="flex justify-between items-center mb-4 border-b border-gray-700/50 pb-3">
-                                        <span class="text-[10px] font-black px-2.5 py-1 rounded ${badgeColor} uppercase tracking-wider shadow-md">${event.status}</span>
-                                        <span class="text-xs text-yellow-400 font-bold bg-gray-900/80 px-2.5 py-1 rounded border border-gray-700">${event.tanggal}</span>
-                                    </div>
-                                    <h3 class="text-xl md:text-2xl font-black text-white mb-3 leading-tight tracking-wide">${event.judul}</h3>
-                                    <p class="text-sm text-gray-300 leading-relaxed mb-4 whitespace-pre-line">${event.deskripsi}</p>
-                                </div>
-                                ${btnHtml}
-                            </div>
-                        </div>`;
+                    let img = event.linkFoto ? `<div class="w-full h-64 md:h-72 bg-black p-4 flex justify-center border-b border-gray-700/50"><img src="${event.linkFoto}" class="w-full h-full object-contain"></div>` : '';
+                    container.innerHTML += `<div class="glass-panel rounded-2xl border-t-4 border-red-500 overflow-hidden shadow-2xl">${img}<div class="p-6"><div class="flex justify-between items-center mb-4"><span class="text-[10px] font-black px-2 py-1 rounded bg-red-600 text-white uppercase">${event.status}</span><span class="text-xs text-yellow-400 font-bold bg-gray-900 px-2 py-1 rounded border border-gray-700">${event.tanggal}</span></div><h3 class="text-xl font-black text-white mb-2">${event.judul}</h3><p class="text-sm text-gray-300 mb-4 whitespace-pre-line">${event.deskripsi}</p><a href="${event.linkDaftar}" target="_blank" class="block w-full text-center bg-white/5 text-white py-2 rounded-xl transition border border-gray-700 text-xs font-bold uppercase">Detail</a></div></div>`;
                 });
-                isEventLoaded = true; 
-            } catch (error) {
-                document.getElementById('event-container').innerHTML = `<div class="glass-panel p-6 rounded-2xl text-center text-red-400 col-span-full text-sm">Gagal memuat jadwal event dari Database: ${error.message}</div>`;
-            }
+            } catch (error) { }
         }
 
-        // Pancing fungsi klasemen saat web pertama kali dimuat
         loadLeaderboardData();
     </script>
 </body>
