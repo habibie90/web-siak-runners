@@ -65,14 +65,22 @@
                         Klasemen Resmi
                     </h2>
                     
-                    <div class="flex items-center gap-2 w-full md:w-auto">
-                        <select id="time-filter" onchange="renderLeaderboardTable()" class="bg-gray-800 border border-gray-600 text-white text-xs md:text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-2 w-full md:w-auto outline-none cursor-pointer font-semibold">
+                    <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                        <select id="time-filter" onchange="handleFilterChange()" class="bg-gray-800 border border-gray-600 text-white text-xs md:text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-2 w-full md:w-auto outline-none cursor-pointer font-semibold">
                             <option value="bulan_ini" selected>📅 Bulan Saat Ini</option>
                             <option value="bulan_lalu">⏮️ Bulan Lalu</option>
                             <option value="minggu_ini">🔥 Minggu Ini (Sen - Min)</option>
+                            <option value="kustom">⚙️ Pilih Tanggal Kustom...</option>
                             <optgroup label="Histori Bulanan" id="month-options"></optgroup>
                         </select>
-                        <button onclick="exportToExcel()" title="Download sebagai File Excel/CSV" class="bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-bold py-2 px-3 rounded-lg transition shadow flex items-center gap-1 shrink-0">
+
+                        <div id="custom-date-container" class="hidden items-center gap-2 w-full md:w-auto bg-gray-800 p-1.5 rounded-lg border border-gray-600">
+                            <input type="date" id="start-date" onchange="renderLeaderboardTable()" class="bg-gray-900 text-gray-300 text-xs p-1.5 rounded outline-none border border-gray-700 w-full md:w-auto focus:border-red-500">
+                            <span class="text-gray-400 text-xs font-bold">s/d</span>
+                            <input type="date" id="end-date" onchange="renderLeaderboardTable()" class="bg-gray-900 text-gray-300 text-xs p-1.5 rounded outline-none border border-gray-700 w-full md:w-auto focus:border-red-500">
+                        </div>
+
+                        <button onclick="exportToExcel()" title="Download Excel" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-bold py-2 px-3 rounded-lg transition shadow flex items-center justify-center gap-1 shrink-0 mt-2 md:mt-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
                         </button>
                     </div>
@@ -108,13 +116,18 @@
         </div>
 
         <section id="page-event" class="page-section"><div class="mb-8 text-center"><h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Kalender <span class="text-red-500">Event</span></h2></div><div id="event-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="glass-panel p-6 rounded-2xl text-center text-gray-400 animate-pulse col-span-full">Mengambil data...</div></div></section>
+        
         <section id="page-upload" class="page-section"><div class="mb-8 text-center"><h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Upload <span class="text-red-500">Foto Event</span></h2></div><div class="glass-panel p-6 md:p-8 rounded-2xl max-w-2xl mx-auto border-t-4 border-red-500 shadow-2xl"><form id="foto-form" class="flex flex-col gap-5" onsubmit="event.preventDefault(); submitData();"><div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Nama Lengkap</label><input type="text" id="up-nama" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500" /></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Kategori Lari</label><select id="up-kategori" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 cursor-pointer"><option value="">Pilih...</option><option value="5K">5K</option><option value="10K">10K</option><option value="HM">HM</option><option value="Marathon">Marathon</option></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Event</label><input type="text" id="up-event" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Tanggal</label><input type="date" id="up-tanggal" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Lokasi Race</label><input type="text" id="up-lokasi" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Foto Selfie</label><input type="file" id="up-foto" accept="image/*" required class="w-full text-xs text-gray-400" /></div><button id="btn-submit" type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-800 text-white font-black py-4 rounded-xl uppercase tracking-widest">Kirim Data & Foto</button><p id="submit-status" class="text-center text-sm font-bold mt-2 hidden"></p></form></div></section>
+        
         <section id="page-tentang" class="page-section"><div class="glass-panel p-8 md:p-12 rounded-2xl text-center"><img src="Logo SR.jpeg" alt="Logo" class="h-24 mx-auto rounded-xl mb-6 bg-white p-2 object-contain" /><h2 class="text-3xl font-black text-white uppercase tracking-widest mb-4">Siak <span class="text-pulse-red">Runners</span></h2><p class="text-gray-300 leading-relaxed max-w-2xl mx-auto">Komunitas pecinta olahraga lari di Kabupaten Siak. Mari berlari bersama!</p></div></section>
     </div>
 
     <script>
-        // MASUKKAN API URL ANDA DI SINI
+        // MASUKKAN URL GOOGLE APPS SCRIPT BAPAK DI BAWAH INI
         const API_URL = 'https://script.google.com/macros/s/AKfycbzE87o9DbsigZD7iROdlTj-iQ1ZmjMsiydyfELA8iOuavsIgD1Jztd2KWFjuh9DZg8S/exec';
+
+        let rawRunData = []; 
+        let currentSortedData = []; 
 
         function switchPage(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('page-active'));
@@ -127,9 +140,6 @@
             if (pageId === 'event') loadEventData();
         }
 
-        let rawRunData = []; // Menyimpan data mentah dari database
-        let currentSortedData = []; // Menyimpan hasil filter saat ini
-
         async function loadLeaderboardData() {
             try {
                 const response = await fetch(API_URL + "?page=klasemen");
@@ -138,12 +148,11 @@
                 
                 rawRunData = result.data; 
                 
-               // Siapkan opsi bulanan di dalam dropdown SECARA OTOMATIS
+                // Siapkan opsi bulanan di dalam dropdown SECARA OTOMATIS
                 const optGroup = document.getElementById('month-options');
                 optGroup.innerHTML = '';
                 const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
                 
-                // Ekstrak data bulan dan tahun dari Spreadsheet
                 let bulanTersedia = new Set();
                 rawRunData.forEach(r => {
                     let d = new Date(r.date);
@@ -151,39 +160,62 @@
                     bulanTersedia.add(val);
                 });
 
-                // Urutkan dari yang terbaru ke terlama
                 let daftarBulan = Array.from(bulanTersedia).sort().reverse();
 
-                // Masukkan ke dalam dropdown
                 daftarBulan.forEach(val => {
                     let y = val.split('-')[0];
                     let m = parseInt(val.split('-')[1]);
                     optGroup.innerHTML += `<option value="${val}">${namaBulan[m - 1]} ${y}</option>`;
                 });
 
-                // Langsung render tabel pertama kali
+                // Render tabel pertama kali saat web dibuka
                 renderLeaderboardTable();
 
             } catch (error) {
-                document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-400">Gagal menarik data: ${error.message}</td></tr>`;
+                document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-400 font-bold">Gagal menarik data: ${error.message}</td></tr>`;
             }
         }
 
-        // FUNGSI INTI UNTUK MEMFILTER TANGGAL
+        // Tampilkan box input tanggal kustom jika dipilih
+        function handleFilterChange() {
+            const filterVal = document.getElementById('time-filter').value;
+            const customContainer = document.getElementById('custom-date-container');
+            
+            if (filterVal === 'kustom') {
+                customContainer.classList.remove('hidden');
+                customContainer.classList.add('flex');
+            } else {
+                customContainer.classList.add('hidden');
+                customContainer.classList.remove('flex');
+                renderLeaderboardTable();
+            }
+        }
+
         function renderLeaderboardTable() {
             const filterVal = document.getElementById('time-filter').value;
             const now = new Date();
             let startDate, endDate;
 
-            // Logika Kalender Filter
-            if (filterVal === 'minggu_ini') {
-                // Cari hari Senin minggu ini
-                let day = now.getDay() || 7; // Ubah Minggu(0) jadi 7
+            // Logika Kalender
+            if (filterVal === 'kustom') {
+                let startVal = document.getElementById('start-date').value;
+                let endVal = document.getElementById('end-date').value;
+                
+                if (!startVal || !endVal) {
+                    document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="3" class="text-center py-12 text-yellow-500 font-bold animate-pulse">Menunggu Anda memilih tanggal awal dan akhir...</td></tr>';
+                    document.getElementById('stat-distance').innerHTML = `0 <span class="text-xl text-yellow-500 font-bold">km</span>`;
+                    return; 
+                }
+                startDate = new Date(startVal);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(endVal);
+                endDate.setHours(23, 59, 59, 999);
+
+            } else if (filterVal === 'minggu_ini') {
+                let day = now.getDay() || 7; 
                 let diffToMonday = now.getDate() - day + 1;
                 startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday);
                 startDate.setHours(0, 0, 0, 0);
-                
-                // Cari hari Minggu (Akhir minggu ini)
                 endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 6);
                 endDate.setHours(23, 59, 59, 999);
@@ -196,44 +228,37 @@
                 startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                 endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-            } else {
-                // Untuk format spesifik: "YYYY-MM"
+            } else { // Spesifik bulan dari dropdown (YYYY-MM)
                 let [y, m] = filterVal.split('-');
                 startDate = new Date(y, m - 1, 1);
                 endDate = new Date(y, m, 0, 23, 59, 59);
             }
 
-            // Saring data berdasarkan rentang tanggal
+            // Saring Data
             let filteredRuns = rawRunData.filter(r => {
                 let runDate = new Date(r.date);
                 return runDate >= startDate && runDate <= endDate;
             });
 
-            // Rekap total lari tiap orang (Agregasi)
+            // Hitung Agregasi
             let stats = {};
             let totalDistKolektif = 0;
             
             filteredRuns.forEach(r => {
                 totalDistKolektif += r.distance;
-                if (!stats[r.name]) {
-                    stats[r.name] = { name: r.name, runs: 0, distance: 0, history: [] };
-                }
+                if (!stats[r.name]) { stats[r.name] = { name: r.name, runs: 0, distance: 0, history: [] }; }
                 stats[r.name].runs += 1;
                 stats[r.name].distance += r.distance;
                 
-                // Format riwayat tanggal
                 let d = new Date(r.date);
                 let dateStr = d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'});
                 stats[r.name].history.push({ tgl: dateStr, km: r.distance.toFixed(2) });
             });
 
-            // Urutkan dari jarak terjauh
             currentSortedData = Object.values(stats).sort((a,b) => b.distance - a.distance);
-
-            // Update UI Angka Total Jarak
             document.getElementById('stat-distance').innerHTML = `${totalDistKolektif.toFixed(1)} <span class="text-xl text-yellow-500 font-bold">km</span>`;
 
-            // Cetak ke Tabel
+            // Cetak Tabel
             const tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '';
             
@@ -262,7 +287,7 @@
             list.innerHTML = '';
             runner.history.forEach((h, i) => {
                 list.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-700/50">
+                    <div class="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-700/50 hover:border-red-500 transition-colors">
                         <span class="text-sm font-bold text-gray-400">#${i+1} - ${h.tgl}</span>
                         <span class="text-sm font-black text-white">${h.km} KM</span>
                     </div>`;
@@ -273,15 +298,11 @@
         function closeModal() { document.getElementById('detail-modal').classList.remove('modal-open'); }
 
         function exportToExcel() {
-            if (currentSortedData.length === 0) { alert("Tidak ada data untuk diexport pada periode ini."); return; }
-            
-            // Ambil label dari filter yang sedang dipilih untuk nama file (misal: "Minggu Ini")
+            if (currentSortedData.length === 0) { alert("Tidak ada data untuk diexport."); return; }
             const filterDropdown = document.getElementById('time-filter');
             const filterLabel = filterDropdown.options[filterDropdown.selectedIndex].text.replace(/[^a-zA-Z0-9]/g, "_");
-            
             let csv = "Posisi,Nama Pelari,Total Lari,Total Jarak (KM)\n";
             currentSortedData.forEach((r, i) => csv += `${i + 1},"${r.name}",${r.runs},${r.distance.toFixed(2)}\n`);
-            
             const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
@@ -289,6 +310,7 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
+        // FUNGSI UPLOAD FOTO
         function submitData() {
             const btn = document.getElementById('btn-submit');
             const status = document.getElementById('submit-status');
@@ -316,6 +338,7 @@
             reader.readAsDataURL(file);
         }
 
+        // FUNGSI AMBIL EVENT
         async function loadEventData() {
             try {
                 const response = await fetch(API_URL + "?page=event");
@@ -325,11 +348,12 @@
                 if (result.data.length === 0) { container.innerHTML = '<div class="glass-panel p-6 text-gray-400 col-span-full">Belum ada event.</div>'; return; }
                 result.data.forEach(event => {
                     let img = event.linkFoto ? `<div class="w-full h-64 md:h-72 bg-black p-4 flex justify-center border-b border-gray-700/50"><img src="${event.linkFoto}" class="w-full h-full object-contain"></div>` : '';
-                    container.innerHTML += `<div class="glass-panel rounded-2xl border-t-4 border-red-500 overflow-hidden shadow-2xl">${img}<div class="p-6"><div class="flex justify-between items-center mb-4"><span class="text-[10px] font-black px-2 py-1 rounded bg-red-600 text-white uppercase">${event.status}</span><span class="text-xs text-yellow-400 font-bold bg-gray-900 px-2 py-1 rounded border border-gray-700">${event.tanggal}</span></div><h3 class="text-xl font-black text-white mb-2">${event.judul}</h3><p class="text-sm text-gray-300 mb-4 whitespace-pre-line">${event.deskripsi}</p><a href="${event.linkDaftar}" target="_blank" class="block w-full text-center bg-white/5 text-white py-2 rounded-xl transition border border-gray-700 text-xs font-bold uppercase">Detail</a></div></div>`;
+                    container.innerHTML += `<div class="glass-panel rounded-2xl border-t-4 border-red-500 overflow-hidden shadow-2xl">${img}<div class="p-6"><div class="flex justify-between items-center mb-4"><span class="text-[10px] font-black px-2 py-1 rounded bg-red-600 text-white uppercase">${event.status}</span><span class="text-xs text-yellow-400 font-bold bg-gray-900 px-2 py-1 rounded border border-gray-700">${event.tanggal}</span></div><h3 class="text-xl font-black text-white mb-2">${event.judul}</h3><p class="text-sm text-gray-300 mb-4 whitespace-pre-line">${event.deskripsi}</p><a href="${event.linkDaftar}" target="_blank" class="block w-full text-center bg-white/5 text-white py-2 rounded-xl transition border border-gray-700 text-xs font-bold uppercase hover:bg-white/10">Detail</a></div></div>`;
                 });
             } catch (error) { }
         }
 
+        // Mulai aplikasi
         loadLeaderboardData();
     </script>
 </body>
