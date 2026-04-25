@@ -113,7 +113,7 @@
                     
                     <div class="flex items-center gap-4">
                         <div class="relative group cursor-pointer" onclick="document.getElementById('upload-profile-pic').click()">
-                            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-gray-700 overflow-hidden bg-gray-800 flex items-center justify-center">
+                            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-gray-700 overflow-hidden bg-gray-800 flex items-center justify-center shadow-lg">
                                 <img id="modal-runner-img" src="" alt="Profile" class="w-full h-full object-cover hidden" />
                                 <span id="modal-runner-initial" class="text-3xl md:text-4xl font-black text-gray-500 uppercase"></span>
                             </div>
@@ -141,9 +141,14 @@
 
                 <div id="profil-update-status" class="hidden bg-green-600/20 text-green-400 text-[10px] text-center py-1 font-bold tracking-widest uppercase">Memperbarui Data...</div>
 
-                <div class="bg-gray-900 px-6 py-2 border-b border-gray-800 flex justify-between items-center text-xs">
-                    <span class="text-gray-500 font-bold uppercase tracking-widest">Riwayat Filter:</span>
-                    <span id="modal-runner-stats" class="text-blue-400 font-black"></span>
+                <div class="bg-gray-900 px-4 md:px-6 py-3 border-b border-gray-800 flex justify-between items-center text-xs gap-2">
+                    <select id="modal-time-filter" onchange="renderModalHistory()" class="bg-gray-800 border border-gray-600 text-gray-300 text-[10px] md:text-xs rounded p-1.5 outline-none focus:border-red-500 cursor-pointer font-bold">
+                        <option value="semua" selected>🌟 Lihat Semua (All-Time)</option>
+                        <option value="bulan_ini">📅 Bulan Saat Ini</option>
+                        <option value="bulan_lalu">⏮️ Bulan Lalu</option>
+                        <option value="minggu_ini">🔥 Minggu Ini (Sen - Min)</option>
+                    </select>
+                    <span id="modal-runner-stats" class="text-blue-400 font-black shrink-0"></span>
                 </div>
 
                 <div class="overflow-y-auto p-4 space-y-2 flex-1" id="modal-history-list"></div>
@@ -160,13 +165,14 @@
     </div>
 
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT BAPAK DI SINI (Yang Baru Di-Deploy)
+        // MASUKKAN URL GOOGLE APPS SCRIPT BAPAK DI SINI
         const API_URL = 'https://script.google.com/macros/s/AKfycbzE87o9DbsigZD7iROdlTj-iQ1ZmjMsiydyfELA8iOuavsIgD1Jztd2KWFjuh9DZg8S/exec';
 
         let rawRunData = []; 
-        let profilesData = {}; // Menyimpan data profil (Foto & Bio)
+        let profilesData = {}; 
         let currentSortedData = []; 
-        let activeRunnerName = ""; // Nama pelari yang sedang dibuka profilnya
+        let activeRunnerName = ""; 
+        let activeRunnerAllRuns = []; // Menyimpan SEMUA riwayat lari khusus pelari yang sedang dibuka
 
         function switchPage(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('page-active'));
@@ -186,7 +192,7 @@
                 if (result.status === "error") throw new Error(result.message);
                 
                 rawRunData = result.data; 
-                profilesData = result.profiles || {}; // Tangkap data profil
+                profilesData = result.profiles || {}; 
                 
                 const optGroup = document.getElementById('month-options');
                 optGroup.innerHTML = '';
@@ -236,7 +242,6 @@
             if (filterVal === 'kustom') {
                 let startVal = document.getElementById('start-date').value;
                 let endVal = document.getElementById('end-date').value;
-                
                 if (!startVal || !endVal) {
                     document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="3" class="text-center py-12 text-yellow-500 font-bold animate-pulse">Menunggu Anda memilih tanggal awal dan akhir...</td></tr>';
                     document.getElementById('stat-distance').innerHTML = `0 <span class="text-xl text-yellow-500 font-bold">km</span>`;
@@ -244,35 +249,29 @@
                 }
                 startDate = new Date(startVal); startDate.setHours(0, 0, 0, 0);
                 endDate = new Date(endVal); endDate.setHours(23, 59, 59, 999);
-
             } else if (filterVal === 'minggu_ini') {
                 let day = now.getDay() || 7; 
                 let diffToMonday = now.getDate() - day + 1;
                 startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday); startDate.setHours(0, 0, 0, 0);
                 endDate = new Date(startDate); endDate.setDate(startDate.getDate() + 6); endDate.setHours(23, 59, 59, 999);
-
             } else if (filterVal === 'bulan_ini') {
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
                 endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
             } else if (filterVal === 'bulan_lalu') {
                 startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                 endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-
             } else {
                 let [y, m] = filterVal.split('-');
                 startDate = new Date(y, m - 1, 1);
                 endDate = new Date(y, m, 0, 23, 59, 59);
             }
 
-            // Hitung Agregasi Sepanjang Waktu (All-Time) Murni dari Data Mentah
             let allTimeStats = {};
             rawRunData.forEach(r => {
                 if (!allTimeStats[r.name]) allTimeStats[r.name] = 0;
                 allTimeStats[r.name] += r.distance;
             });
 
-            // Saring Data Terfilter
             let filteredRuns = rawRunData.filter(r => {
                 let runDate = new Date(r.date);
                 return runDate >= startDate && runDate <= endDate;
@@ -283,13 +282,9 @@
             
             filteredRuns.forEach(r => {
                 totalDistKolektif += r.distance;
-                if (!stats[r.name]) { stats[r.name] = { name: r.name, runs: 0, distance: 0, history: [], allTimeDist: allTimeStats[r.name] }; }
+                if (!stats[r.name]) { stats[r.name] = { name: r.name, runs: 0, distance: 0, allTimeDist: allTimeStats[r.name] }; }
                 stats[r.name].runs += 1;
                 stats[r.name].distance += r.distance;
-                
-                let d = new Date(r.date);
-                let dateStr = d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'});
-                stats[r.name].history.push({ tgl: dateStr, km: r.distance.toFixed(2) });
             });
 
             currentSortedData = Object.values(stats).sort((a,b) => b.distance - a.distance);
@@ -307,7 +302,6 @@
                 let rank = index + 1;
                 let rankIcon = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : rank));
                 
-                // Cek apakah punya foto profil
                 let profilePic = profilesData[runner.name] && profilesData[runner.name].foto ? profilesData[runner.name].foto : null;
                 let avatarHtml = profilePic 
                     ? `<img src="${profilePic}" class="w-8 h-8 rounded-full object-cover border border-gray-600">`
@@ -331,17 +325,18 @@
         }
 
         // ==========================================
-        // LOGIKA MODAL PROFIL & UPLOAD
+        // LOGIKA MODAL PROFIL & FILTER DI DALAM MODAL
         // ==========================================
         function showRunnerDetail(index) {
             const runner = currentSortedData[index];
-            activeRunnerName = runner.name; // Simpan ke variabel global
+            activeRunnerName = runner.name; 
+            
+            // Ekstrak SEMUA riwayat lari milik pelari ini
+            activeRunnerAllRuns = rawRunData.filter(r => r.name === activeRunnerName);
             
             document.getElementById('modal-runner-name').innerText = runner.name;
-            document.getElementById('modal-runner-stats').innerText = `${runner.runs} KALI | ${runner.distance.toFixed(2)} KM`;
             document.getElementById('modal-runner-alltime').innerText = `${runner.allTimeDist.toFixed(2)} KM`;
             
-            // Atur Foto & Bio
             const imgEl = document.getElementById('modal-runner-img');
             const initialEl = document.getElementById('modal-runner-initial');
             const bioInput = document.getElementById('modal-runner-bio');
@@ -364,21 +359,76 @@
                 initialEl.innerText = runner.name.charAt(0);
             }
 
+            // Atur Dropdown Modal kembali ke "Semua" setiap kali modal baru dibuka
+            document.getElementById('modal-time-filter').value = 'semua';
+            
+            // Panggil fungsi render list di dalam modal
+            renderModalHistory();
+
+            document.getElementById('detail-modal').classList.add('modal-open');
+        }
+
+        // FUNGSI UNTUK MERENDER LIST HISTORY BERDASARKAN FILTER MODAL
+        function renderModalHistory() {
+            const filterVal = document.getElementById('modal-time-filter').value;
+            const now = new Date();
+            let startDate, endDate;
+            let isAllTime = false;
+
+            if (filterVal === 'semua') {
+                isAllTime = true;
+            } else if (filterVal === 'minggu_ini') {
+                let day = now.getDay() || 7; 
+                let diffToMonday = now.getDate() - day + 1;
+                startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday); startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(startDate); endDate.setDate(startDate.getDate() + 6); endDate.setHours(23, 59, 59, 999);
+            } else if (filterVal === 'bulan_ini') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            } else if (filterVal === 'bulan_lalu') {
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+            }
+
+            // Saring data khusus untuk pelari ini
+            let filteredRuns = activeRunnerAllRuns;
+            if (!isAllTime) {
+                filteredRuns = activeRunnerAllRuns.filter(r => {
+                    let runDate = new Date(r.date);
+                    return runDate >= startDate && runDate <= endDate;
+                });
+            }
+
+            // Urutkan dari yang terbaru (tanggal paling akhir) ke yang terlama
+            filteredRuns.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let totalDist = 0;
             const list = document.getElementById('modal-history-list');
             list.innerHTML = '';
-            runner.history.forEach((h, i) => {
-                list.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-700/50 hover:border-red-500 transition-colors">
-                        <span class="text-sm font-bold text-gray-400">#${i+1} - ${h.tgl}</span>
-                        <span class="text-sm font-black text-white">${h.km} KM</span>
-                    </div>`;
-            });
-            document.getElementById('detail-modal').classList.add('modal-open');
+            
+            if(filteredRuns.length === 0) {
+                list.innerHTML = '<div class="text-center py-8 text-gray-500 italic text-sm">Tidak ada aktivitas lari pada periode ini.</div>';
+            } else {
+                filteredRuns.forEach((r, i) => {
+                    totalDist += r.distance;
+                    let d = new Date(r.date);
+                    let dateStr = d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'});
+                    
+                    // Nomor urut dibalik agar aktivitas terbaru adalah #Terbesar atau biarkan berurutan
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-700/50 hover:border-red-500 transition-colors">
+                            <span class="text-sm font-bold text-gray-400">#${filteredRuns.length - i} - ${dateStr}</span>
+                            <span class="text-sm font-black text-white">${r.distance.toFixed(2)} KM</span>
+                        </div>`;
+                });
+            }
+
+            // Update Statistik Filter
+            document.getElementById('modal-runner-stats').innerText = `${filteredRuns.length} KALI | ${totalDist.toFixed(2)} KM`;
         }
 
         function closeModal() { document.getElementById('detail-modal').classList.remove('modal-open'); }
 
-        // MENGUBAH FOTO PROFIL DENGAN KOMPRESI CANVAS AGAR RINGAN DI SPREADSHEET
         function handleProfilePicUpload(event) {
             const file = event.target.files[0];
             if (!file || !activeRunnerName) return;
@@ -389,26 +439,16 @@
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    
-                    // Kompres jadi persegi kecil 200x200 pixel
                     canvas.width = 200; canvas.height = 200;
-                    
-                    // Potong tengah (Crop Center)
                     const size = Math.min(img.width, img.height);
                     const startX = (img.width - size) / 2;
                     const startY = (img.height - size) / 2;
-                    
                     ctx.drawImage(img, startX, startY, size, size, 0, 0, 200, 200);
-                    
-                    // Convert ke kualitas sedang 0.7
                     const base64Image = canvas.toDataURL('image/jpeg', 0.7);
                     
-                    // Langsung tampilkan di Modal
                     document.getElementById('modal-runner-img').src = base64Image;
                     document.getElementById('modal-runner-img').classList.remove('hidden');
                     document.getElementById('modal-runner-initial').classList.add('hidden');
-                    
-                    // Update ke server
                     updateProfilKeServer(activeRunnerName, null, base64Image);
                 };
                 img.src = e.target.result;
@@ -416,13 +456,11 @@
             reader.readAsDataURL(file);
         }
 
-        // MENGUBAH BIO
         function handleBioUpdate() {
             const newBio = document.getElementById('modal-runner-bio').value;
             if (activeRunnerName) updateProfilKeServer(activeRunnerName, newBio, null);
         }
 
-        // KIRIM DATA PROFIL KE GOOGLE APPS SCRIPT
         async function updateProfilKeServer(nama, bio, fotoBase64) {
             const statusDiv = document.getElementById('profil-update-status');
             statusDiv.classList.remove('hidden');
@@ -439,13 +477,13 @@
                 if(result.status === "success") {
                     statusDiv.innerText = "✅ Profil Diperbarui";
                     statusDiv.className = "bg-green-600/20 text-green-400 text-[10px] text-center py-1 font-bold tracking-widest uppercase";
-                    
-                    // Simpan sementara di frontend agar tidak hilang jika diclose
                     if (!profilesData[nama]) profilesData[nama] = {};
                     if (bio !== null) profilesData[nama].bio = bio;
                     if (fotoBase64 !== null) profilesData[nama].foto = fotoBase64;
-                    
                     setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+                    
+                    // Render ulang tabel utama agar foto profil baru muncul di list
+                    renderLeaderboardTable(); 
                 } else { throw new Error(result.message); }
             } catch (error) {
                 statusDiv.innerText = "❌ Gagal Menyimpan";
@@ -454,7 +492,6 @@
             }
         }
 
-        // FUNGSI LAINNYA TETAP SAMA (Export, Submit Event, Load Event)
         function exportToExcel() {
             if (currentSortedData.length === 0) { alert("Tidak ada data untuk diexport."); return; }
             const filterDropdown = document.getElementById('time-filter');
