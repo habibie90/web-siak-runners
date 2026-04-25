@@ -18,6 +18,12 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         #detail-modal { display: none; }
         .modal-open { display: flex !important; animation: fadeIn 0.3s; }
+        
+        /* Custom Scrollbar for Modal */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
     </style>
 </head>
 <body class="animated-bg text-gray-200 font-sans antialiased selection:bg-red-500 selection:text-white">
@@ -99,35 +105,68 @@
             </div>
         </section>
 
-        <div id="detail-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm justify-center items-center p-4">
-            <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden border border-gray-700 flex flex-col max-h-[80vh]">
-                <div class="bg-gray-900 px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-                    <div>
-                        <h3 id="modal-runner-name" class="text-xl font-black text-white uppercase tracking-wider">Nama Pelari</h3>
-                        <p id="modal-runner-stats" class="text-xs text-yellow-500 font-bold uppercase"></p>
+        <div id="detail-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md justify-center items-center p-4">
+            <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden border border-gray-700 flex flex-col max-h-[90vh] shadow-2xl">
+                
+                <div class="bg-gradient-to-b from-gray-800 to-gray-900 px-6 py-6 border-b border-gray-700 relative">
+                    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold transition-colors">&times;</button>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="relative group cursor-pointer" onclick="document.getElementById('upload-profile-pic').click()">
+                            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-gray-700 overflow-hidden bg-gray-800 flex items-center justify-center">
+                                <img id="modal-runner-img" src="" alt="Profile" class="w-full h-full object-cover hidden" />
+                                <span id="modal-runner-initial" class="text-3xl md:text-4xl font-black text-gray-500 uppercase"></span>
+                            </div>
+                            <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </div>
+                            <input type="file" id="upload-profile-pic" accept="image/*" class="hidden" onchange="handleProfilePicUpload(event)">
+                        </div>
+
+                        <div class="flex-1">
+                            <h3 id="modal-runner-name" class="text-xl md:text-2xl font-black text-white uppercase tracking-wider leading-tight">Nama Pelari</h3>
+                            
+                            <div class="mt-1 flex items-center gap-2 text-xs font-bold">
+                                <span class="bg-gray-800 text-yellow-500 px-2 py-0.5 rounded border border-gray-700">🏆 ALL TIME:</span>
+                                <span id="modal-runner-alltime" class="text-gray-300">0 KM</span>
+                            </div>
+
+                            <div class="mt-2 relative">
+                                <input type="text" id="modal-runner-bio" placeholder="Tulis bio singkat..." class="w-full bg-transparent border-b border-gray-600 focus:border-red-500 text-xs text-gray-400 focus:text-white outline-none py-1 pr-6 transition-colors" onchange="handleBioUpdate()">
+                                <svg class="w-3 h-3 text-gray-500 absolute right-1 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                        </div>
                     </div>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
                 </div>
-                <div class="overflow-y-auto p-4 space-y-2" id="modal-history-list"></div>
+
+                <div id="profil-update-status" class="hidden bg-green-600/20 text-green-400 text-[10px] text-center py-1 font-bold tracking-widest uppercase">Memperbarui Data...</div>
+
+                <div class="bg-gray-900 px-6 py-2 border-b border-gray-800 flex justify-between items-center text-xs">
+                    <span class="text-gray-500 font-bold uppercase tracking-widest">Riwayat Filter:</span>
+                    <span id="modal-runner-stats" class="text-blue-400 font-black"></span>
+                </div>
+
+                <div class="overflow-y-auto p-4 space-y-2 flex-1" id="modal-history-list"></div>
+                
                 <div class="p-4 bg-gray-900 border-t border-gray-700">
-                    <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl">TUTUP</button>
+                    <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl tracking-widest uppercase transition-colors">TUTUP PROFIL</button>
                 </div>
             </div>
         </div>
 
         <section id="page-event" class="page-section"><div class="mb-8 text-center"><h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Kalender <span class="text-red-500">Event</span></h2></div><div id="event-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div class="glass-panel p-6 rounded-2xl text-center text-gray-400 animate-pulse col-span-full">Mengambil data...</div></div></section>
-        
         <section id="page-upload" class="page-section"><div class="mb-8 text-center"><h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">Upload <span class="text-red-500">Foto Event</span></h2></div><div class="glass-panel p-6 md:p-8 rounded-2xl max-w-2xl mx-auto border-t-4 border-red-500 shadow-2xl"><form id="foto-form" class="flex flex-col gap-5" onsubmit="event.preventDefault(); submitData();"><div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Nama Lengkap</label><input type="text" id="up-nama" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500" /></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Kategori Lari</label><select id="up-kategori" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white outline-none focus:border-red-500 cursor-pointer"><option value="">Pilih...</option><option value="5K">5K</option><option value="10K">10K</option><option value="HM">HM</option><option value="Marathon">Marathon</option></select></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Event</label><input type="text" id="up-event" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Tanggal</label><input type="date" id="up-tanggal" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Lokasi Race</label><input type="text" id="up-lokasi" required class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-white focus:border-red-500" /></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-widest">Foto Selfie</label><input type="file" id="up-foto" accept="image/*" required class="w-full text-xs text-gray-400" /></div><button id="btn-submit" type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-800 text-white font-black py-4 rounded-xl uppercase tracking-widest">Kirim Data & Foto</button><p id="submit-status" class="text-center text-sm font-bold mt-2 hidden"></p></form></div></section>
-        
         <section id="page-tentang" class="page-section"><div class="glass-panel p-8 md:p-12 rounded-2xl text-center"><img src="Logo SR.jpeg" alt="Logo" class="h-24 mx-auto rounded-xl mb-6 bg-white p-2 object-contain" /><h2 class="text-3xl font-black text-white uppercase tracking-widest mb-4">Siak <span class="text-pulse-red">Runners</span></h2><p class="text-gray-300 leading-relaxed max-w-2xl mx-auto">Komunitas pecinta olahraga lari di Kabupaten Siak. Mari berlari bersama!</p></div></section>
     </div>
 
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT BAPAK DI BAWAH INI
+        // MASUKKAN URL GOOGLE APPS SCRIPT BAPAK DI SINI (Yang Baru Di-Deploy)
         const API_URL = 'https://script.google.com/macros/s/AKfycbzE87o9DbsigZD7iROdlTj-iQ1ZmjMsiydyfELA8iOuavsIgD1Jztd2KWFjuh9DZg8S/exec';
 
         let rawRunData = []; 
+        let profilesData = {}; // Menyimpan data profil (Foto & Bio)
         let currentSortedData = []; 
+        let activeRunnerName = ""; // Nama pelari yang sedang dibuka profilnya
 
         function switchPage(pageId) {
             document.querySelectorAll('.page-section').forEach(el => el.classList.remove('page-active'));
@@ -147,8 +186,8 @@
                 if (result.status === "error") throw new Error(result.message);
                 
                 rawRunData = result.data; 
+                profilesData = result.profiles || {}; // Tangkap data profil
                 
-                // Siapkan opsi bulanan di dalam dropdown SECARA OTOMATIS
                 const optGroup = document.getElementById('month-options');
                 optGroup.innerHTML = '';
                 const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -168,7 +207,6 @@
                     optGroup.innerHTML += `<option value="${val}">${namaBulan[m - 1]} ${y}</option>`;
                 });
 
-                // Render tabel pertama kali saat web dibuka
                 renderLeaderboardTable();
 
             } catch (error) {
@@ -176,7 +214,6 @@
             }
         }
 
-        // Tampilkan box input tanggal kustom jika dipilih
         function handleFilterChange() {
             const filterVal = document.getElementById('time-filter').value;
             const customContainer = document.getElementById('custom-date-container');
@@ -196,7 +233,6 @@
             const now = new Date();
             let startDate, endDate;
 
-            // Logika Kalender
             if (filterVal === 'kustom') {
                 let startVal = document.getElementById('start-date').value;
                 let endVal = document.getElementById('end-date').value;
@@ -206,19 +242,14 @@
                     document.getElementById('stat-distance').innerHTML = `0 <span class="text-xl text-yellow-500 font-bold">km</span>`;
                     return; 
                 }
-                startDate = new Date(startVal);
-                startDate.setHours(0, 0, 0, 0);
-                endDate = new Date(endVal);
-                endDate.setHours(23, 59, 59, 999);
+                startDate = new Date(startVal); startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(endVal); endDate.setHours(23, 59, 59, 999);
 
             } else if (filterVal === 'minggu_ini') {
                 let day = now.getDay() || 7; 
                 let diffToMonday = now.getDate() - day + 1;
-                startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday);
-                startDate.setHours(0, 0, 0, 0);
-                endDate = new Date(startDate);
-                endDate.setDate(startDate.getDate() + 6);
-                endDate.setHours(23, 59, 59, 999);
+                startDate = new Date(now.getFullYear(), now.getMonth(), diffToMonday); startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(startDate); endDate.setDate(startDate.getDate() + 6); endDate.setHours(23, 59, 59, 999);
 
             } else if (filterVal === 'bulan_ini') {
                 startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -228,25 +259,31 @@
                 startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                 endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-            } else { // Spesifik bulan dari dropdown (YYYY-MM)
+            } else {
                 let [y, m] = filterVal.split('-');
                 startDate = new Date(y, m - 1, 1);
                 endDate = new Date(y, m, 0, 23, 59, 59);
             }
 
-            // Saring Data
+            // Hitung Agregasi Sepanjang Waktu (All-Time) Murni dari Data Mentah
+            let allTimeStats = {};
+            rawRunData.forEach(r => {
+                if (!allTimeStats[r.name]) allTimeStats[r.name] = 0;
+                allTimeStats[r.name] += r.distance;
+            });
+
+            // Saring Data Terfilter
             let filteredRuns = rawRunData.filter(r => {
                 let runDate = new Date(r.date);
                 return runDate >= startDate && runDate <= endDate;
             });
 
-            // Hitung Agregasi
             let stats = {};
             let totalDistKolektif = 0;
             
             filteredRuns.forEach(r => {
                 totalDistKolektif += r.distance;
-                if (!stats[r.name]) { stats[r.name] = { name: r.name, runs: 0, distance: 0, history: [] }; }
+                if (!stats[r.name]) { stats[r.name] = { name: r.name, runs: 0, distance: 0, history: [], allTimeDist: allTimeStats[r.name] }; }
                 stats[r.name].runs += 1;
                 stats[r.name].distance += r.distance;
                 
@@ -258,7 +295,6 @@
             currentSortedData = Object.values(stats).sort((a,b) => b.distance - a.distance);
             document.getElementById('stat-distance').innerHTML = `${totalDistKolektif.toFixed(1)} <span class="text-xl text-yellow-500 font-bold">km</span>`;
 
-            // Cetak Tabel
             const tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '';
             
@@ -267,22 +303,67 @@
                 return; 
             }
 
-            currentSortedData.slice(0, 50).forEach((runner, index) => {
+            currentSortedData.forEach((runner, index) => {
                 let rank = index + 1;
                 let rankIcon = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : rank));
+                
+                // Cek apakah punya foto profil
+                let profilePic = profilesData[runner.name] && profilesData[runner.name].foto ? profilesData[runner.name].foto : null;
+                let avatarHtml = profilePic 
+                    ? `<img src="${profilePic}" class="w-8 h-8 rounded-full object-cover border border-gray-600">`
+                    : `<div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center border border-gray-600 text-xs font-bold text-gray-400">${runner.name.charAt(0)}</div>`;
+
                 tbody.innerHTML += `
                     <tr onclick="showRunnerDetail(${index})" class="hover:bg-gray-800/80 transition-colors group cursor-pointer border-b border-gray-800/40">
                         <td class="px-4 md:px-6 py-4 text-center font-bold text-gray-500">${rankIcon}</td>
-                        <td class="px-4 md:px-6 py-4 font-bold text-gray-100 group-hover:text-red-400 transition-colors">${runner.name}<br><span class="text-[10px] text-gray-400 font-normal bg-gray-900 border border-gray-700 px-2 py-0.5 rounded-full">${runner.runs}x Lari</span></td>
+                        <td class="px-4 md:px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                ${avatarHtml}
+                                <div>
+                                    <span class="font-bold text-gray-100 group-hover:text-red-400 transition-colors">${runner.name}</span><br>
+                                    <span class="text-[10px] text-gray-400 font-normal bg-gray-900 border border-gray-700 px-2 py-0.5 rounded-full">${runner.runs}x Lari</span>
+                                </div>
+                            </div>
+                        </td>
                         <td class="px-4 md:px-6 py-4 text-right text-blue-400 font-black text-base md:text-lg">${runner.distance.toFixed(2)}</td>
                     </tr>`;
             });
         }
 
+        // ==========================================
+        // LOGIKA MODAL PROFIL & UPLOAD
+        // ==========================================
         function showRunnerDetail(index) {
             const runner = currentSortedData[index];
+            activeRunnerName = runner.name; // Simpan ke variabel global
+            
             document.getElementById('modal-runner-name').innerText = runner.name;
-            document.getElementById('modal-runner-stats').innerText = `${runner.runs} Kali Lari | Total ${runner.distance.toFixed(2)} KM`;
+            document.getElementById('modal-runner-stats').innerText = `${runner.runs} KALI | ${runner.distance.toFixed(2)} KM`;
+            document.getElementById('modal-runner-alltime').innerText = `${runner.allTimeDist.toFixed(2)} KM`;
+            
+            // Atur Foto & Bio
+            const imgEl = document.getElementById('modal-runner-img');
+            const initialEl = document.getElementById('modal-runner-initial');
+            const bioInput = document.getElementById('modal-runner-bio');
+            
+            if (profilesData[runner.name]) {
+                bioInput.value = profilesData[runner.name].bio || "";
+                if (profilesData[runner.name].foto) {
+                    imgEl.src = profilesData[runner.name].foto;
+                    imgEl.classList.remove('hidden');
+                    initialEl.classList.add('hidden');
+                } else {
+                    imgEl.classList.add('hidden');
+                    initialEl.classList.remove('hidden');
+                    initialEl.innerText = runner.name.charAt(0);
+                }
+            } else {
+                bioInput.value = "";
+                imgEl.classList.add('hidden');
+                initialEl.classList.remove('hidden');
+                initialEl.innerText = runner.name.charAt(0);
+            }
+
             const list = document.getElementById('modal-history-list');
             list.innerHTML = '';
             runner.history.forEach((h, i) => {
@@ -297,6 +378,83 @@
 
         function closeModal() { document.getElementById('detail-modal').classList.remove('modal-open'); }
 
+        // MENGUBAH FOTO PROFIL DENGAN KOMPRESI CANVAS AGAR RINGAN DI SPREADSHEET
+        function handleProfilePicUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !activeRunnerName) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Kompres jadi persegi kecil 200x200 pixel
+                    canvas.width = 200; canvas.height = 200;
+                    
+                    // Potong tengah (Crop Center)
+                    const size = Math.min(img.width, img.height);
+                    const startX = (img.width - size) / 2;
+                    const startY = (img.height - size) / 2;
+                    
+                    ctx.drawImage(img, startX, startY, size, size, 0, 0, 200, 200);
+                    
+                    // Convert ke kualitas sedang 0.7
+                    const base64Image = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Langsung tampilkan di Modal
+                    document.getElementById('modal-runner-img').src = base64Image;
+                    document.getElementById('modal-runner-img').classList.remove('hidden');
+                    document.getElementById('modal-runner-initial').classList.add('hidden');
+                    
+                    // Update ke server
+                    updateProfilKeServer(activeRunnerName, null, base64Image);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // MENGUBAH BIO
+        function handleBioUpdate() {
+            const newBio = document.getElementById('modal-runner-bio').value;
+            if (activeRunnerName) updateProfilKeServer(activeRunnerName, newBio, null);
+        }
+
+        // KIRIM DATA PROFIL KE GOOGLE APPS SCRIPT
+        async function updateProfilKeServer(nama, bio, fotoBase64) {
+            const statusDiv = document.getElementById('profil-update-status');
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = "⏳ Menyimpan Profil...";
+            statusDiv.className = "bg-yellow-600/20 text-yellow-400 text-[10px] text-center py-1 font-bold tracking-widest uppercase";
+
+            const payload = { action: "update_profil", nama: nama };
+            if (bio !== null) payload.bio = bio;
+            if (fotoBase64 !== null) payload.fotoBase64 = fotoBase64;
+
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if(result.status === "success") {
+                    statusDiv.innerText = "✅ Profil Diperbarui";
+                    statusDiv.className = "bg-green-600/20 text-green-400 text-[10px] text-center py-1 font-bold tracking-widest uppercase";
+                    
+                    // Simpan sementara di frontend agar tidak hilang jika diclose
+                    if (!profilesData[nama]) profilesData[nama] = {};
+                    if (bio !== null) profilesData[nama].bio = bio;
+                    if (fotoBase64 !== null) profilesData[nama].foto = fotoBase64;
+                    
+                    setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+                } else { throw new Error(result.message); }
+            } catch (error) {
+                statusDiv.innerText = "❌ Gagal Menyimpan";
+                statusDiv.className = "bg-red-600/20 text-red-400 text-[10px] text-center py-1 font-bold tracking-widest uppercase";
+                setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+            }
+        }
+
+        // FUNGSI LAINNYA TETAP SAMA (Export, Submit Event, Load Event)
         function exportToExcel() {
             if (currentSortedData.length === 0) { alert("Tidak ada data untuk diexport."); return; }
             const filterDropdown = document.getElementById('time-filter');
@@ -310,7 +468,6 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // FUNGSI UPLOAD FOTO
         function submitData() {
             const btn = document.getElementById('btn-submit');
             const status = document.getElementById('submit-status');
@@ -338,7 +495,6 @@
             reader.readAsDataURL(file);
         }
 
-        // FUNGSI AMBIL EVENT
         async function loadEventData() {
             try {
                 const response = await fetch(API_URL + "?page=event");
@@ -353,7 +509,6 @@
             } catch (error) { }
         }
 
-        // Mulai aplikasi
         loadLeaderboardData();
     </script>
 </body>
