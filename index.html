@@ -566,56 +566,75 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        async function submitData() {
-    const btn = document.getElementById('btn-submit');
-    const status = document.getElementById('submit-status');
-    const file = document.getElementById('up-foto').files[0];
-    
-    // GANTI DENGAN DATA CLOUDINARY BAPAK
-    const CLOUD_NAME = "dsai9btzj"; 
-    const UPLOAD_PRESET = "ml_default"; 
+ async function submitData() {
+            const btn = document.getElementById('btn-submit');
+            const status = document.getElementById('submit-status');
+            const file = document.getElementById('up-foto').files[0];
+            
+            // DATA CLOUDINARY PAK HABIB
+            const CLOUD_NAME = "dsai9btzj"; 
+            const UPLOAD_PRESET = "ml_default"; 
 
-    btn.innerHTML = `<span>⏳ Mengirim...</span>`;
-    btn.disabled = true;
+            if (!file) {
+                alert("Silakan pilih foto terlebih dahulu!");
+                return;
+            }
 
-    // 1. Upload ke Cloudinary dulu
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+            btn.innerHTML = `<span>⏳ Mengirim...</span>`;
+            btn.disabled = true;
+            status.classList.add('hidden');
 
-    try {
-        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-            method: "POST",
-            body: formData
-        });
-        const cloudData = await cloudRes.json();
-        const fotoUrl = cloudData.secure_url;
+            try {
+                // 1. Upload langsung ke Cloudinary
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", UPLOAD_PRESET);
 
-        // 2. Kirim Link ke Google Sheets
-        const payload = {
-            action: "upload_foto_v2",
-            nama: document.getElementById('up-nama').value,
-            namaEvent: document.getElementById('up-event').value,
-            tanggalEvent: document.getElementById('up-tanggal').value,
-            lokasiEvent: document.getElementById('up-lokasi').value,
-            kategori: document.getElementById('up-kategori').value,
-            fotoUrl: fotoUrl // Hanya kirim Link, bukan file berat
-        };
+                const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!cloudRes.ok) throw new Error("Gagal upload ke Cloud Storage");
+                
+                const cloudData = await cloudRes.json();
+                const fotoUrl = cloudData.secure_url; // Ini link foto permanennya
 
-        const sheetRes = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        
-        status.innerText = "✅ Berhasil Terkirim!";
-        status.className = "text-green-400 font-bold mt-2";
-    } catch (e) {
-        status.innerText = "❌ Gagal: " + e.message;
-    } finally {
-        btn.innerHTML = "Kirim Data & Foto";
-        btn.disabled = false;
-    }
-}
+                // 2. Kirim Link Foto & Data Form ke Google Sheets
+                const payload = {
+                    action: "upload_foto_v2",
+                    nama: document.getElementById('up-nama').value,
+                    namaEvent: document.getElementById('up-event').value,
+                    tanggalEvent: document.getElementById('up-tanggal').value,
+                    lokasiEvent: document.getElementById('up-lokasi').value,
+                    kategori: document.getElementById('up-kategori').value,
+                    fotoUrl: fotoUrl 
+                };
+
+                const sheetRes = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                
+                const sheetResult = await sheetRes.json();
+                
+                if (sheetResult.status === "success") {
+                    status.innerText = "✅ Berhasil Terkirim!";
+                    status.className = "text-center text-green-400 font-bold mt-2";
+                    document.getElementById('foto-form').reset();
+                } else {
+                    throw new Error(sheetResult.message);
+                }
+
+            } catch (e) {
+                status.innerText = "❌ Gagal: " + e.message;
+                status.className = "text-center text-red-400 font-bold mt-2";
+            } finally {
+                btn.innerHTML = `<span>Kirim Data & Foto</span>`;
+                btn.disabled = false;
+                status.classList.remove('hidden');
+            }
+        }
 
         async function loadEventData() {
             try {
