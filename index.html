@@ -138,17 +138,28 @@
                 
                 rawRunData = result.data; 
                 
-                // Siapkan opsi bulanan di dalam dropdown
+               // Siapkan opsi bulanan di dalam dropdown SECARA OTOMATIS
                 const optGroup = document.getElementById('month-options');
                 optGroup.innerHTML = '';
                 const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                const currentYear = new Date().getFullYear();
                 
-                for(let m = 1; m <= 12; m++) {
-                    let monthStr = String(m).padStart(2, '0');
-                    let val = `${currentYear}-${monthStr}`;
-                    optGroup.innerHTML += `<option value="${val}">${namaBulan[m-1]} ${currentYear}</option>`;
-                }
+                // Ekstrak data bulan dan tahun dari Spreadsheet
+                let bulanTersedia = new Set();
+                rawRunData.forEach(r => {
+                    let d = new Date(r.date);
+                    let val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    bulanTersedia.add(val);
+                });
+
+                // Urutkan dari yang terbaru ke terlama
+                let daftarBulan = Array.from(bulanTersedia).sort().reverse();
+
+                // Masukkan ke dalam dropdown
+                daftarBulan.forEach(val => {
+                    let y = val.split('-')[0];
+                    let m = parseInt(val.split('-')[1]);
+                    optGroup.innerHTML += `<option value="${val}">${namaBulan[m - 1]} ${y}</option>`;
+                });
 
                 // Langsung render tabel pertama kali
                 renderLeaderboardTable();
